@@ -1,0 +1,54 @@
+services:
+  db:
+    build: ./postgres
+    container_name: pi_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - pi_net
+
+  privacyidea:
+    build: ./privacyidea
+    container_name: privacyidea
+    environment:
+      PI_ADMIN_USER: ${PI_ADMIN_USER}
+      PI_ADMIN_PASS: ${PI_ADMIN_PASS}
+      PI_DB_HOST: ${PI_DB_HOST}
+      PI_DB_NAME: ${PI_DB_NAME}
+      PI_DB_USER: ${PI_DB_USER}
+      PI_DB_PASS: ${PI_DB_PASS}
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+    networks:
+      - pi_net 
+
+  freeradius:
+    build: ./freeradius
+    container_name: freeradius
+    depends_on:
+      - db
+      - privacyidea
+    ports:
+      - "1812:1812/udp"
+      - "1813:1813/udp"
+    environment:
+      PI_DB_HOST: ${PI_DB_HOST}
+      PI_DB_USER: ${PI_DB_USER}
+      PI_DB_PASS: ${PI_DB_PASS}
+      PI_DB_NAME: ${PI_DB_NAME}
+      PI_URL: ${PI_URL}
+    networks:
+      - pi_net
+
+volumes:
+  pgdata:
+
+networks:
+  pi_net:
+    driver: bridge

@@ -27,5 +27,6 @@ USER root
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# TODO
 EXPOSE 5000
 ENTRYPOINT ["/entrypoint.sh"]

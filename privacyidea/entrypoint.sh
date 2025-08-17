@@ -46,5 +46,6 @@ if ! $PI_MANAGE admin list | grep -q "admin"; then
 fi
 
 echo "[Init] Запуск PrivacyIDEA..."
+# TODO
 /opt/privacyidea/bin/pi-manage runserver -h 0.0.0.0
 #exec $VENV_DIR/bin/uwsgi --ini /etc/privacyidea/privacyideaapp.wsgi

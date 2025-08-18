@@ -20,6 +20,7 @@ services:
   privacyidea:
     build: ./privacyidea
     container_name: privacyidea
+    env_file: ".env"
     environment:
       PI_ADMIN_USER: ${PI_ADMIN_USER}
       PI_ADMIN_PASS: ${PI_ADMIN_PASS}

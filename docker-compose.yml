@@ -5,6 +5,8 @@ services:
     env_file: ".env"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"  
     networks:
       - pi_net
     healthcheck:
@@ -48,7 +50,7 @@ services:
     networks:
       - pi_net
     healthcheck:
-      test: ["CMD-SHELL", "echo | nc -u -w1 localhost 1812 || exit 1"]
+      test: ["CMD-SHELL", "echo | nc -uzv -w1 localhost 1812 || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 3

@@ -13,8 +13,12 @@ RUN apt-get update && apt-get install -y \
     libsodium-dev \
     swig \
     git \
+    curl \
     vim \
     gcc && \
+    apt-get clean && \
+    apt-get purge -y gcc git && \
+    apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/* && \
     useradd -r -M -U -d /opt/privacyidea privacyidea && \
     mkdir -p /etc/privacyidea /opt/privacyidea /var/log/privacyidea && \

@@ -16,6 +16,7 @@ RUN apt-get update && \
         liburi-perl \
         curl \
         wget \
+        netcat \
         vim \
         less \
         build-essential \
@@ -25,7 +26,8 @@ RUN apt-get update && \
         URI::Encode \
         Digest::SHA \
         DBD::Pg && \
-    apt-get clean && \    
+    apt-get clean && \
+    apt-get autoremove -y && \    
     rm -rf /var/lib/apt/lists/* /root/.cpanm && \
     rm -f /etc/freeradius/3.0/sites-enabled/default && \
     mkdir -p /etc/freeradius/3.0/mods-config/perl && \

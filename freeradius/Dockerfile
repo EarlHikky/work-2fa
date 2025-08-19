@@ -19,6 +19,7 @@ COPY sites-enabled/privacyidea /etc/freeradius/3.0/sites-enabled/
 COPY users /etc/freeradius/3.0/
 COPY clients.conf /etc/freeradius/3.0/
 COPY entrypoint.sh /entrypoint.sh
+COPY --chown=privacyidea:privacyidea rlm_perl.ini /etc/privacyidea/
 
 RUN chmod +x /entrypoint.sh \
     && chown -R freerad:freerad /etc/freeradius/3.0 \

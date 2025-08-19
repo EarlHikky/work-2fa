@@ -21,8 +21,6 @@ RUN python3 -m venv /opt/privacyidea \
     psycopg2-binary
 
 COPY --chown=privacyidea:privacyidea pi.cfg /etc/privacyidea/
-COPY --chown=privacyidea:privacyidea rlm_perl.ini /etc/privacyidea/
-COPY --chown=privacyidea:privacyidea privacyideaapp.wsgi /etc/privacyidea/
 
 USER root
 COPY entrypoint.sh /entrypoint.sh

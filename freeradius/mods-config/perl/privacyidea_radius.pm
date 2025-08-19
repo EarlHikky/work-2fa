@@ -587,22 +587,34 @@ sub authenticate {
         if ( $decoded->{result}{value} ) {
             &radiusd::radlog( Info, "privacyIDEA access granted for $params{'user'} realm='$params{'realm'}'" );
 
-	    # ADDED
-        # TODO env
-	    my $dbh = DBI->connect(
-	        "dbi:Pg:dbname=pi_db;host=db;port=5432",
-	        "pi_user",
-	        "test123",
-	        { RaiseError => 1, AutoCommit => 1 }
-	    )or die $DBI::errstr;
+	        # ADDED
+            my $db   = $ENV{"POSTGRES_DB"};
+            my $host = $ENV{"PI_DB_HOST"};
+            my $port = $ENV{"PI_DB_PORT"};
+            my $user = $ENV{"POSTGRES_USER"};
+            my $pass = $ENV{"POSTGRES_PASSWORD"};
+            my $dsn = "dbi:Pg:dbname=$db;host=$host;port=$port";
+            my $dbh;
+                try {
+                    $dbh = DBI->connect(
+                    $dsn,
+                    $user,
+                    $pass,
+                    { RaiseError => 1, AutoCommit => 1 }
+                    );
+                } catch {
+                    &radiusd::radlog( Info, "DB connection failed: $_" );
+                    $g_return = RLM_MODULE_REJECT;
+                return $g_return;
+                };
 
-	    my $username = $RAD_REQUEST{'User-Name'};
-	    my $password_otp = $RAD_REQUEST{'User-Password'};
+	        my $username = $RAD_REQUEST{'User-Name'};
+	        my $password_otp = $RAD_REQUEST{'User-Password'};
             my ($password, $otp) = $password_otp =~ /(.+)(\d{6})$/;
             my $sth = $dbh->prepare("SELECT password, rpcm_group FROM users WHERE username = ?");
             $sth->execute($username);
             my ($pass_hash, $rcntec_group) = $sth->fetchrow_array();
-	    $sth->finish();
+	        $sth->finish();
             $dbh->disconnect();
 
             if (!defined $pass_hash || !check_ssha512($password, $pass_hash)) {

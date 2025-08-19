@@ -1,7 +1,5 @@
 #!/bin/bash
 
-sleep 15
-
 VENV_DIR="/opt/privacyidea"
 CONFIG_FILE="/etc/privacyidea/pi.cfg"
 PI_MANAGE="$VENV_DIR/bin/pi-manage"
@@ -33,19 +31,20 @@ if [ ! -f "/etc/privacyidea/private.pem" ]; then
     echo "[Init] Созданы audit_keys"
 fi
 
-if ! $PI_MANAGE db current > /dev/null 2>&1; then
+if [ ! -f "/etc/privacyidea/db_init_done" ]; then
     echo "[Init] База данных не инициализирована. Выполняется createdb..."
     $PI_MANAGE createdb
+    echo "[Init] Выполняется миграция..."
     $PI_MANAGE db stamp head -d $VENV_DIR/lib/lib/privacyidea/migrations/
+    touch /etc/privacyidea/db_init_done
 fi
 
-echo "[Init] Пробую создать админа..."
 if ! $PI_MANAGE admin list | grep -q "admin"; then
-    echo "[Init] Создаётся администратор admin с паролем admin (смени сразу!)"
+    echo "[Init] Создаётся администратор admin с паролем admin"
     $PI_MANAGE admin add admin -p admin
 fi
 
 echo "[Init] Запуск PrivacyIDEA..."
 # TODO
 /opt/privacyidea/bin/pi-manage runserver -h 0.0.0.0
-#exec $VENV_DIR/bin/uwsgi --ini /etc/privacyidea/privacyideaapp.wsgi
+

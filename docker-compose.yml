@@ -2,18 +2,15 @@ services:
   db:
     build: ./postgres
     container_name: pi_postgres
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+    env_file: ".env"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - pi_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d pi_db"]
-      interval: 30s
-      timeout: 30s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
       retries: 3
       start_period: 5s
 
@@ -21,40 +18,47 @@ services:
     build: ./privacyidea
     container_name: privacyidea
     env_file: ".env"
-    environment:
-      PI_ADMIN_USER: ${PI_ADMIN_USER}
-      PI_ADMIN_PASS: ${PI_ADMIN_PASS}
-      PI_DB_HOST: ${PI_DB_HOST}
-      PI_DB_NAME: ${PI_DB_NAME}
-      PI_DB_USER: ${PI_DB_USER}
-      PI_DB_PASS: ${PI_DB_PASS}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "5000:5000"
     networks:
-      - pi_net 
+      - pi_net
+    volumes:
+      - privacyidea_etc:/etc/privacyidea
+      - privacyidea_data:/var/lib/privacyidea
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
 
   freeradius:
     build: ./freeradius
     container_name: freeradius
     depends_on:
-      - db
       - privacyidea
     ports:
       - "1812:1812/udp"
       - "1813:1813/udp"
-    environment:
-      PI_DB_HOST: ${PI_DB_HOST}
-      PI_DB_USER: ${PI_DB_USER}
-      PI_DB_PASS: ${PI_DB_PASS}
-      PI_DB_NAME: ${PI_DB_NAME}
-      PI_URL: ${PI_URL}
+    env_file: ".env"
     networks:
       - pi_net
+    healthcheck:
+      test: ["CMD-SHELL", "echo | nc -u -w1 localhost 1812 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
 
 volumes:
   pgdata:
+  privacyidea_etc:
+  privacyidea_data:
 
 networks:
   pi_net:

@@ -24,7 +24,4 @@ RUN chmod +x /entrypoint.sh \
     && chown -R freerad:freerad /etc/freeradius/3.0 \
     && rm /etc/freeradius/3.0/sites-enabled/default
 
-# TODO
-EXPOSE 1812/udp 1813/udp 1812/tcp 1813/tcp
-
 ENTRYPOINT ["/entrypoint.sh"]

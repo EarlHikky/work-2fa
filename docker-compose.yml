@@ -10,7 +10,7 @@ services:
     networks:
       - pi_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${PI_DB_USER} -d ${PI_DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 3

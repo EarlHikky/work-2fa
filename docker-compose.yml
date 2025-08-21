@@ -32,7 +32,7 @@ services:
       - privacyidea_data:/var/lib/privacyidea
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5000/ || exit 1"]
-      interval: 5s
+      interval: 50s
       timeout: 5s
       retries: 3
       start_period: 5s
@@ -42,7 +42,8 @@ services:
     build: ./freeradius
     container_name: freeradius
     depends_on:
-      - privacyidea
+      privacyidea:
+        condition: service_healthy
     ports:
       - "1812:1812/udp"
       - "1813:1813/udp"

@@ -588,11 +588,11 @@ sub authenticate {
             &radiusd::radlog( Info, "privacyIDEA access granted for $params{'user'} realm='$params{'realm'}'" );
 
 	        # ADDED
-            my $db   = $ENV{"POSTGRES_DB"};
+            my $db   = $ENV{"PI_DB_NAME"};
             my $host = $ENV{"PI_DB_HOST"};
             my $port = $ENV{"PI_DB_PORT"};
-            my $user = $ENV{"POSTGRES_USER"};
-            my $pass = $ENV{"POSTGRES_PASSWORD"};
+            my $user = $ENV{"PI_DB_USER"};
+            my $pass = $ENV{"PI_DB_PASS"};
             my $dsn = "dbi:Pg:dbname=$db;host=$host;port=$port";
             my $dbh;
                 try {

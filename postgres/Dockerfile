@@ -1,3 +1,3 @@
-FROM postgres:14.19-bookworm
+FROM postgres:latest
 
 COPY init.sql /docker-entrypoint-initdb.d/

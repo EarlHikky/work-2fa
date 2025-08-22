@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:24.04
 
 COPY entrypoint.sh /entrypoint.sh
 
@@ -14,6 +14,7 @@ RUN apt-get update && \
         libjson-perl \
         libunicode-string-perl \
         liburi-perl \
+        netcat-traditional \
         curl \
         wget \
         vim \

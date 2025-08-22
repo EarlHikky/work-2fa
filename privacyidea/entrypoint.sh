@@ -46,5 +46,5 @@ fi
 
 echo "[Init] Запуск PrivacyIDEA..."
 # TODO
-/opt/privacyidea/bin/pi-manage runserver -h 0.0.0.0
+/opt/privacyidea/bin/pi-manage run -h 0.0.0.0
 

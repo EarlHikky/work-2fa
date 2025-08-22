@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM debian:latest
 
 COPY entrypoint.sh /entrypoint.sh
 

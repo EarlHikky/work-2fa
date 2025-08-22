@@ -1,12 +1,8 @@
-FROM ubuntu:24.04
+FROM python:3.11-slim-bookworm
 
 COPY entrypoint.sh /entrypoint.sh
 
 RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-venv \
-    python3-pip \
-    python3-wheel \
     libssl-dev \
     libldap2-dev \
     libsodium-dev \

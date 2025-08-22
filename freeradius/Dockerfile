@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:latest
 
 COPY entrypoint.sh /entrypoint.sh
 
@@ -16,7 +16,6 @@ RUN apt-get update && \
         liburi-perl \
         curl \
         wget \
-        netcat \
         vim \
         less \
         build-essential \

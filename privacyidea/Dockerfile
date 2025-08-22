@@ -1,11 +1,10 @@
-FROM ubuntu:22.04
+FROM ubuntu:latest
 
 COPY entrypoint.sh /entrypoint.sh
 
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-venv \
-    python3-distutils \
     python3-pip \
     python3-wheel \
     libssl-dev \
@@ -28,7 +27,7 @@ RUN apt-get update && apt-get install -y \
 USER privacyidea
 WORKDIR /opt/privacyidea
 
-ENV PI_VERSION=3.8.1
+ENV PI_VERSION=3.11.4
 
 RUN python3 -m venv /opt/privacyidea && \
     /opt/privacyidea/bin/pip install --no-cache-dir \

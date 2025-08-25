@@ -1,28 +1,8 @@
 services:
-  db:
-    build: ./postgres
-    container_name: pi_postgres
-    env_file: ".env"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"  
-    networks:
-      - pi_net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PI_DB_USER} -d ${PI_DB_NAME}"]
-      interval: 5s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
-
   privacyidea:
     build: ./privacyidea
     container_name: privacyidea
     env_file: ".env"
-    depends_on:
-      db:
-        condition: service_healthy
     ports:
       - "5000:5000"
     networks:
@@ -59,7 +39,6 @@ services:
 
 
 volumes:
-  pgdata:
   privacyidea_etc:
   privacyidea_data:
 

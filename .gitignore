@@ -3,3 +3,4 @@ Trash/
 from_serv/
 privacyidea/privacyidea_etc/
 *.trash
+.vagrant/

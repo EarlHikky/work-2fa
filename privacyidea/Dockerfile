@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y \
     rm -rf /var/lib/apt/lists/* && \
     useradd -r -M -U -d /opt/privacyidea privacyidea && \
     mkdir -p /etc/privacyidea /opt/privacyidea /var/log/privacyidea && \
+    touch /etc/privacyidea/privacyidea.sqlite && \
     chown -R privacyidea:privacyidea /opt/privacyidea /etc/privacyidea /var/log/privacyidea && \
     chmod +x /entrypoint.sh
     

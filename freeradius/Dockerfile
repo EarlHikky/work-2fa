@@ -1,7 +1,5 @@
 FROM debian:latest
 
-COPY entrypoint.sh /entrypoint.sh
-
 RUN apt-get update && \
     apt-get install -y \
         freeradius \
@@ -14,6 +12,7 @@ RUN apt-get update && \
         libjson-perl \
         libunicode-string-perl \
         liburi-perl \
+        libdbd-sqlite3-perl \
         netcat-traditional \
         curl \
         wget \
@@ -25,11 +24,14 @@ RUN apt-get update && \
     cpanm --force \
         URI::Encode \
         Digest::SHA \
-        DBD::Pg && \
-    apt-get clean && \
-    apt-get autoremove -y && \    
-    rm -rf /var/lib/apt/lists/* /root/.cpanm && \
-    rm -f /etc/freeradius/3.0/sites-enabled/default && \
+        DBD::SQLite && \
+        apt-get clean && \
+        apt-get autoremove -y && \    
+        rm -rf /var/lib/apt/lists/* /var/lib/apt/lists/* /root/.cpanm
+
+COPY entrypoint.sh /entrypoint.sh
+
+RUN rm -f /etc/freeradius/3.0/sites-enabled/default && \
     mkdir -p /etc/freeradius/3.0/mods-config/perl && \
     mkdir -p /etc/freeradius/3.0/mods-enabled && \
     mkdir -p /etc/freeradius/3.0/sites-enabled && \

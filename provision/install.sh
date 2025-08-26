@@ -1,3 +1,250 @@
+#!/bin/bash
+set -e
+
+# -----------------------------
+# Настройки
+# -----------------------------
+source /vagrant_provision/config.sh
+
+export DEBIAN_FRONTEND=noninteractive
+export DEBIAN_PRIORITY=critical
+
+PACKAGES=(
+    sqlite3
+    python3
+    python3-venv
+    python3-pip
+    python3-wheel
+    libssl-dev
+    libldap2-dev
+    libsodium-dev
+    swig
+    git
+    curl
+    gcc
+    freeradius
+    freeradius-utils
+    build-essential
+    perl
+    cpanminus
+    libperl-dev
+    libconfig-inifiles-perl
+    libtry-tiny-perl
+    liblwp-protocol-https-perl
+    libjson-perl
+    libunicode-string-perl
+    liburi-perl
+    libpq-dev
+    libdbd-sqlite3-perl
+    liburi-encode-perl
+    libdigest-sha-perl
+)
+
+# -----------------------------
+# Установка пакетов
+# -----------------------------
+echo "[INFO] Updating package index and installing required packages..."
+
+sudo apt-get update && apt-get upgrade -y
+sudo apt-get install -y "${PACKAGES[@]}"
+
+# -----------------------------
+# Установка PrivacyIDEA
+# -----------------------------
+echo "[INFO] Installing PrivacyIDEA..."
+
+sudo mkdir -p /etc/privacyidea /opt/privacyidea /var/log/privacyidea
+sudo useradd -r -M -U -d /opt/privacyidea privacyidea
+touch /etc/privacyidea/privacyidea.sqlite
+sudo chown -R privacyidea:privacyidea /opt/privacyidea /etc/privacyidea /var/log/privacyidea
+
+sudo -su privacyidea bash <<EOSU
+export PI_VERSION=${PI_VERSION}
+python3 -m venv /opt/privacyidea
+source /opt/privacyidea/bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install -r "https://raw.githubusercontent.com/privacyidea/privacyidea/v${PI_VERSION}/requirements.txt"
+python3 -m pip install "privacyidea==${PI_VERSION}"
+EOSU
+
+sudo tee /etc/privacyidea/pi.cfg > /dev/null <<EOF
+import os
+import logging
+
+# The realm, where users are allowed to login as administrators
+SUPERUSER_REALM = ['super']
+# Your database
+SQLALCHEMY_DATABASE_URI = "sqlite:////etc/privacyidea/privacyidea.sqlite"
+# This is used to encrypt the auth_token
+SECRET_KEY = 't0p s3cr3t'
+# This is used to encrypt the admin passwords
+PI_PEPPER = "Never know..."
+# This is used to encrypt the token data and token passwords
+PI_ENCFILE = '/etc/privacyidea/enckey'
+# This is used to sign the audit log
+PI_AUDIT_KEY_PRIVATE = '/etc/privacyidea/private.pem'
+PI_AUDIT_KEY_PUBLIC = '/etc/privacyidea/public.pem'
+PI_AUDIT_SQL_TRUNCATE = True
+# The Class for managing the SQL connection pool
+PI_ENGINE_REGISTRY_CLASS = "shared"
+PI_AUDIT_POOL_SIZE = 20
+PI_LOGFILE = '/var/log/privacyidea/privacyidea.log'
+PI_LOGLEVEL = logging.INFO
+EOF
+
+
+sudo chown -R privacyidea:privacyidea /etc/privacyidea/
+sudo chmod 640 /etc/privacyidea/pi.cfg
+
+SQLITE3="/usr/bin/sqlite3"
+
+test -x ${SQLITE3} || (echo "Could not find sqlite3!" && exit 1)
+
+DATABASE=/etc/privacyidea/users.sqlite
+echo "create table users (id INTEGER PRIMARY KEY ,\
+	username TEXT UNIQUE,\
+	password TEXT, \
+	rpcm_group TEXT);" | ${SQLITE3} ${DATABASE}
+
+cat <<END > /etc/privacyidea/usersdb.install
+{'Server': '/',
+ 'Driver': 'sqlite',
+ 'Database': '/etc/privacyidea/users.sqlite',
+ 'Table': 'users',
+ 'Limit': '500',
+ 'Editable': '1',
+ 'Map': '{"userid": "id", "username": "username",  "password": "password", "rpcm_group": "rpcm_group"}'
+}
+END
+sudo chown privacyidea:privacyidea ${DATABASE}
+
+# -----------------------------
+# Инициализация PrivacyIDEA
+# -----------------------------
+echo "[INFO] Running pi-manage tasks..."
+sudo -su privacyidea bash <<EOSU
+PEPPER="$(tr -dc A-Za-z0-9_ </dev/urandom | head -c24)" && echo "PI_PEPPER = '$PEPPER'" >> /etc/privacyidea/pi.cfg
+SECRET="$(tr -dc A-Za-z0-9_ </dev/urandom | head -c24)" && echo "SECRET_KEY = '$SECRET'" >> /etc/privacyidea/pi.cfg
+source /opt/privacyidea/bin/activate
+
+export PI_URL=http://localhost:5000/validate/check
+
+pi-manage setup create_enckey
+pi-manage setup create_audit_keys
+pi-manage createdb
+pi-manage db stamp head -d /opt/privacyidea/lib/privacyidea/migrations/
+pi-manage config resolver create localusers sqlresolver /etc/privacyidea/usersdb.install
+pi-manage config realm create localsql localusers
+pi-manage admin add ${PI_ADMIN_USER} -p ${PI_ADMIN_PASS}
+EOSU
+
+# -----------------------------
+# Настройка FreeRADIUS
+# -----------------------------
+echo "[INFO] Configuring FreeRADIUS..."
+rm /etc/freeradius/3.0/mods-available/perl
+touch /etc/freeradius/3.0/mods-available/perl
+sudo tee /etc/freeradius/3.0/mods-available/perl > /dev/null <<'EOF'
+perl { 
+	filename = ${modconfdir}/${.:instance}/privacyidea_radius.pm 
+	perl_flags = "-T"
+}
+EOF
+ln -s /etc/freeradius/3.0/mods-available/perl /etc/freeradius/3.0/mods-enabled/
+
+touch /etc/freeradius/3.0/sites-available/privacyidea
+sudo tee /etc/freeradius/3.0/sites-available/privacyidea > /dev/null <<'EOF'
+server default {
+        listen {
+                type = auth
+                ipaddr = *
+                port = 0
+                limit {
+                        max_connections = 16
+                        lifetime = 0
+                        idle_timeout = 30
+                }
+        }
+
+        listen {
+                ipaddr = *
+                port = 0
+                type = acct
+                limit {
+                }
+        }
+
+        authorize {
+                preprocess
+                digest
+                suffix
+                ntdomain
+                files
+                expiration
+                logintime
+                pap
+                update control {
+                        Auth-Type := Perl
+                }
+        }
+
+        authenticate {
+                Auth-Type Perl {
+                        perl
+                }
+                digest
+        }
+
+        preacct {
+                suffix
+                files
+        }
+
+        accounting {
+                detail
+        }
+
+        session {
+                }
+        post-auth {
+                }
+        pre-proxy {
+                }
+        post-proxy {
+                }
+}
+EOF
+ln -s /etc/freeradius/3.0/sites-available/privacyidea /etc/freeradius/3.0/sites-enabled/
+rm /etc/freeradius/3.0/sites-enabled/default
+
+touch /etc/privacyidea/rlm_perl.ini
+sudo tee /etc/privacyidea/rlm_perl.ini > /dev/null <<'EOF'
+[Default]
+URL = http://localhost:5000/validate/check
+REALM = localsql
+Debug = False
+SSL_CHECK = False
+EOF
+
+rm /etc/freeradius/3.0/users
+touch /etc/freeradius/3.0/users
+sudo tee /etc/freeradius/3.0/users > /dev/null <<'EOF'
+DEFAULT Auth-Type := perl
+EOF
+
+rm /etc/freeradius/3.0/clients.conf
+touch /etc/freeradius/3.0/clients.conf
+sudo tee /etc/freeradius/3.0/clients.conf > /dev/null <<EOF
+client 10.210.1.0/0 {
+
+shortname = local
+secret = ${FREERAD_SECRET}
+
+}
+EOF
+
+touch /etc/freeradius/3.0/mods-config/perl/privacyidea_radius.pm
+sudo tee /etc/freeradius/3.0/mods-config/perl/privacyidea_radius.pm > /dev/null <<'EOF'
 #
 #    privacyIDEA FreeRADIUS plugin
 #    2021-07-23 Cornelius Kölbel <cornelius.koelbel@netknights.it>
@@ -792,3 +1039,6 @@ sub test_call {
 }
 
 1;
+EOF
+
+echo "[INFO] Installation completed successfully! You can start the server with: ./run.sh"

@@ -30,6 +30,8 @@ services:
     env_file: ".env"
     networks:
       - pi_net
+    volumes:
+      - privacyidea_etc:/etc/privacyidea  
     healthcheck:
       test: ["CMD-SHELL", "echo | nc -uzv -w1 localhost 1812 || exit 1"]
       interval: 50s

@@ -122,8 +122,6 @@ PEPPER="$(tr -dc A-Za-z0-9_ </dev/urandom | head -c24)" && echo "PI_PEPPER = '$P
 SECRET="$(tr -dc A-Za-z0-9_ </dev/urandom | head -c24)" && echo "SECRET_KEY = '$SECRET'" >> /etc/privacyidea/pi.cfg
 source /opt/privacyidea/bin/activate
 
-export PI_URL=http://localhost:5000/validate/check
-
 pi-manage setup create_enckey
 pi-manage setup create_audit_keys
 pi-manage setup create_tables
@@ -1050,6 +1048,7 @@ User=privacyidea
 Group=privacyidea
 WorkingDirectory=/opt/privacyidea
 Environment=PATH=/opt/privacyidea/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=PI_URL=${PI_URL}
 ExecStart=/opt/privacyidea/bin/pi-manage run -h ${PI_HOST} -p ${PI_PORT}
 Restart=always
 RestartSec=5

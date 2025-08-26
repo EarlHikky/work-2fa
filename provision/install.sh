@@ -226,6 +226,8 @@ sudo tee /etc/freeradius/3.0/users > /dev/null <<'EOF'
 DEFAULT Auth-Type := perl
 EOF
 
+sudo chown freerad:freerad /etc/freeradius/3.0/users
+
 rm /etc/freeradius/3.0/clients.conf
 touch /etc/freeradius/3.0/clients.conf
 sudo tee /etc/freeradius/3.0/clients.conf > /dev/null <<EOF
@@ -236,6 +238,8 @@ secret = ${FREERAD_SECRET}
 
 }
 EOF
+
+sudo chown freerad:freerad /etc/freeradius/3.0/clients.conf
 
 touch /etc/freeradius/3.0/mods-config/perl/privacyidea_radius.pm
 sudo tee /etc/freeradius/3.0/mods-config/perl/privacyidea_radius.pm > /dev/null <<'EOF'

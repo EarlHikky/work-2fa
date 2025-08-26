@@ -126,7 +126,7 @@ export PI_URL=http://localhost:5000/validate/check
 
 pi-manage setup create_enckey
 pi-manage setup create_audit_keys
-pi-manage createdb
+pi-manage setup create_tables
 pi-manage db stamp head -d /opt/privacyidea/lib/privacyidea/migrations/
 pi-manage config resolver create localusers sqlresolver /etc/privacyidea/usersdb.install
 pi-manage config realm create localsql localusers

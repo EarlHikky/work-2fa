@@ -1,6 +1,11 @@
 ```sh
-sudo docker compose build && sudo docker-compose up -d
+sudo docker compose up --build
 ```
-![](./add_realm.png)
-![](realm_config.png)
 
+```sh
+vagrant up
+```
+
+```sh
+sudo bash install.sh
+```

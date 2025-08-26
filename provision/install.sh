@@ -16,18 +16,12 @@ PACKAGES=(
     python3-pip
     python3-wheel
     libssl-dev
-    libldap2-dev
     libsodium-dev
-    swig
     git
     curl
-    gcc
     freeradius
     freeradius-utils
-    build-essential
     perl
-    cpanminus
-    libperl-dev
     libconfig-inifiles-perl
     libtry-tiny-perl
     liblwp-protocol-https-perl
@@ -113,7 +107,8 @@ cat <<END > /etc/privacyidea/usersdb.install
  'Table': 'users',
  'Limit': '500',
  'Editable': '1',
- 'Map': '{"userid": "id", "username": "username",  "password": "password", "rpcm_group": "rpcm_group"}'
+ 'Map': '{"userid": "id", "username": "username",  "password": "password", "rpcm_group": "rpcm_group"}',
+ 'Password_Hash_Type': 'SSHA512'
 }
 END
 sudo chown privacyidea:privacyidea ${DATABASE}
@@ -1041,4 +1036,32 @@ sub test_call {
 1;
 EOF
 
-echo "[INFO] Installation completed successfully! You can start the server with: ./run.sh"
+# -----------------------------
+# systemd service
+# -----------------------------
+sudo cat > /etc/systemd/system/privacyidea.service <<EOF
+[Unit]
+Description=privacyIDEA Service
+After=network.target
+
+[Service]
+Type=simple
+User=privacyidea
+Group=privacyidea
+WorkingDirectory=/opt/privacyidea
+Environment=PATH=/opt/privacyidea/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/opt/privacyidea/bin/pi-manage run -h ${PI_HOST} -p ${PI_PORT}
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo chmod 644 /etc/systemd/system/privacyidea.service
+sudo systemctl daemon-reload
+sudo systemctl enable privacyidea.service
+sudo systemctl start privacyidea.service
+sudo systemctl restart freeradius.service
+
+echo "[INFO] Installation completed successfully!"

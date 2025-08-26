@@ -16,9 +16,7 @@ Vagrant.configure("2") do |config|
     frerad.vm.synced_folder "./provision", "/vagrant_provision"
     frerad.vm.provision "shell", inline: <<-SHELL
         bash /vagrant_provision/install.sh
-        bash /vagrant_provision/run.sh
     SHELL
-
   end
 
 end

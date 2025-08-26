@@ -9,13 +9,13 @@ services:
       - pi_net
     volumes:
       - privacyidea_etc:/etc/privacyidea
-      - privacyidea_data:/var/lib/privacyidea
+      - ./privacyidea_logs:/var/log/privacyidea
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5000/ || exit 1"]
       interval: 50s
       timeout: 5s
       retries: 3
-      start_period: 5s
+      start_period: 15s
 
 
   freeradius:
@@ -37,12 +37,12 @@ services:
       interval: 50s
       timeout: 5s
       retries: 3
-      start_period: 5s
+      start_period: 15s
 
 
 volumes:
   privacyidea_etc:
-  privacyidea_data:
+  privacyidea_logs:
 
 networks:
   pi_net:

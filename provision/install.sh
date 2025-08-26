@@ -218,6 +218,7 @@ REALM = localsql
 Debug = False
 SSL_CHECK = False
 EOF
+sudo chown privacyidea:privacyidea /etc/privacyidea/rlm_perl.ini
 
 rm /etc/freeradius/3.0/users
 touch /etc/freeradius/3.0/users
